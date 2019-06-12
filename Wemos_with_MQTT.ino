@@ -12,14 +12,14 @@
 #include <Adafruit_MQTT_Client.h>
 
 /************************* WiFi Access Point *********************************/
-#define WLAN_SSID       "<ssid>"			
-#define WLAN_PASS       "<pass>"
+#define WLAN_SSID       "<ssid>"		//modify this	
+#define WLAN_PASS       "<pass>"		//modify this
 
 /************************* MQTT Broker Setup *********************************/
 #define mqtt_server      "<mqtt_broker>"
 #define mqtt_serverport  1883                   // use 8883 for SSL
-#define mqtt_username    "<mqtt_username>"
-#define mqtt_password    "<mqtt_password>"
+#define mqtt_username    "<mqtt_username>"		//modify
+#define mqtt_password    "<mqtt_password>"		//modify
 
 /************************* Constants, Variables, Integers, etc *********************************/
 const int tubePin = D1;
@@ -46,7 +46,9 @@ void MQTT_connect();
 void setup() {
   Serial.begin(115200);
   Serial.println(""); Serial.println(F("Booting... v1.0"));
-  pinMode(relayPin, OUTPUT);
+  pinMode(tubePin, OUTPUT);
+  pinMode(bulbPin, OUTPUT);
+  pinMode(fanPin, OUTPUT);
   // Connect to WiFi access point.
   Serial.print("Connecting to "); Serial.println(WLAN_SSID);
   WiFi.mode(WIFI_STA);
@@ -106,15 +108,28 @@ void loop() {
       Serial.println("Close Relay for 100 ms & then Open");
       
       
-      //digitalWrite(relayPin, HIGH);
-      //delay(togDelay);
-      //digitalWrite(relayPin, LOW);
-      //delay(postDelay);
+   // Check if a client has connected
+  client = server.available();
+  if (!client) {
+    return;
+  }
+ 
+  // Wait until the client sends some data
+  Serial.println("new client");
+  while(!client.available()){
+    delay(1);
+  }   
       
+      
+  // Read the first line of the request
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
+  
   
   //Match the request for TUBE
   
-  value = LOW;
+  int value = LOW;
   if (request.indexOf("/TUBE=ON") != -1) {
     digitalWrite(tubePin, HIGH);
     value = HIGH;
@@ -141,7 +156,7 @@ void loop() {
       
    //Match the request for FAN
       
-      int value = LOW;
+      value = LOW;
   if (request.indexOf("/FAN=ON") != -1) {
     digitalWrite(fanPin, HIGH);
     value = HIGH;
@@ -150,6 +165,66 @@ void loop() {
     digitalWrite(fanPin, LOW);
     value = LOW;
   }   
+      
+      
+      // Return the response
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println(""); //  do not forget this one
+  client.println("<!DOCTYPE HTML>");
+  client.println("<html>");
+ 
+  
+  
+  client.print("Fan pin is now: ");
+ 
+  if(value == HIGH) {
+    client.print("On");  
+  } else {
+    client.print("Off");
+  }
+  client.println("<br><br>");
+  client.println("Click <a href=\"/FAN=ON\">here</a> turn the FAN on pin 1 ON<br>");
+  client.println("Click <a href=\"/FAN=OFF\">here</a> turn the FAN on pin 1 OFF<br>");
+  
+  client.println("<br><br>");
+  
+  
+  
+  client.print("Light pin is now: ");
+ 
+  if(value == HIGH) {
+    client.print("On");  
+  } else {
+    client.print("Off");
+  }
+  client.println("<br><br>");
+  client.println("Click <a href=\"/LIGHT=ON\">here</a> turn the LIGHT on pin 3 ON<br>");
+  client.println("Click <a href=\"/LIGHT=OFF\">here</a> turn the LIGHT on pin 3 OFF<br>");
+  
+  client.println("<br><br>");
+  
+  
+  
+  
+  client.print("Bulb pin is now: ");
+ 
+  if(value == HIGH) {
+    client.print("On");  
+  } else {
+    client.print("Off");
+  }
+  client.println("<br><br>");
+  client.println("Click <a href=\"/BULB=ON\">here</a> turn the BULB on pin 2 ON<br>");
+  client.println("Click <a href=\"/BULB=OFF\">here</a> turn the BULB on pin 2 OFF<br>");
+
+  
+  client.println("</html>");
+ 
+  delay(1);
+  Serial.println("Client disconnected");
+  Serial.println("");
+      
          
     }
   }
