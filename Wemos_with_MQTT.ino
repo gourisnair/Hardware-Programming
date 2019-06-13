@@ -31,6 +31,8 @@ const long postDelay = 200;  // pause for 200 milliseconds after toggling to Ope
 int value = 0;
 int relayState = LOW;
 
+WiFiServer server(80);
+
 // Create an ESP8266 WiFiClient class to connect to the MQTT server.
 WiFiClient client;
 
