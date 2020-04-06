@@ -1,0 +1,20 @@
+unsigned long startMillis;                          //This variable storesthe time when the device is switched on
+unsigned long currentMillis;                        //Stores the current time wherever used
+const unsigned long timeperiod = 9000000;               //the value is a number of milliseconds thee motor should be turned on(15 minutes)
+
+void setup() {
+  Serial.begin(9600);                              // opens serial port, sets data rate to 9600 bps
+  while (! Serial);                                // wait for serial port to connect. Needed for native USB
+  startMillis = millis();                         //initial start time
+}
+
+void loop()
+{
+  currentMillis = millis();                       //get the current "time" (actually the number of milliseconds since the program started)
+  if (currentMillis - startMillis >= timeperiod)  //test whether the period has elapsed
+  {
+    digitalWrite(ledPin, !digitalRead(ledPin));  //if so, change the state of the LED
+    startMillis = currentMillis;                 //IMPORTANT to save the start time of the current LED state.
+  }
+
+}
